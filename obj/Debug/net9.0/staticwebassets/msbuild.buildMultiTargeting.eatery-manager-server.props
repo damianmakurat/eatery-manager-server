@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\eatery-manager-server.props" />
+</Project>
