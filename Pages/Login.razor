@@ -1,0 +1,31 @@
+﻿@page "/login"
+@layout eatery_manager_server.Shared.LoginLayout
+@using eatery_manager_server.Data.Models
+@inject eatery_manager_server.Data.Services.LoginService LoginService
+
+<h3>Login</h3>
+
+@if (LoginItems == null || LoginItems.Count == 0)
+{
+    <p>Brak dostępnych pozycji w menu.</p>
+}
+else
+{
+    <ul>
+        @foreach (var item in LoginItems)
+        {
+            <li>@item.Username - @item.Password zł</li>
+        }
+    </ul>
+}
+
+@code {
+    private List<eatery_manager_server.Data.Models.Login> LoginItems = new();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        LoginItems = LoginService.GetUsers();
+    }
+
+}

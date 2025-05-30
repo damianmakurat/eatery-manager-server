@@ -1,0 +1,11 @@
+﻿@page "/"
+
+// Wybranie jako strone glowna "/main" zamiast "/"
+@inject NavigationManager NavManager
+
+@code {
+    protected override void OnInitialized()
+    {
+        NavManager.NavigateTo("/main");
+    }
+}

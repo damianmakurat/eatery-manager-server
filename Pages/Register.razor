@@ -1,0 +1,64 @@
+﻿@page "/Register"
+@layout eatery_manager_server.Shared.LoginLayout
+@using eatery_manager_server.Data.Models
+@inject eatery_manager_server.Data.Services.LoginService LoginService
+@using BCrypt.Net
+
+
+<h3>Register</h3>
+
+<EditForm Model="@newUser" OnValidSubmit="RegisterUser">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Login:</label>
+        <InputText @bind-Value="newUser.Username" />
+    </div>
+    <div>
+        <label>Email:</label>
+        <InputText @bind-Value="newUser.Email" type="email" />
+    </div>
+    <div>
+        <label>Hasło:</label>
+        <InputText @bind-Value="newUser.Password" type="password" />
+    </div>
+    <button type="submit">Zarejestruj</button>
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <p style="color: green">@successMessage</p>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p style="color: red">@errorMessage</p>
+    }
+</EditForm>
+
+@code {
+    private eatery_manager_server.Data.Models.Login newUser = new();
+
+    private string successMessage = "";
+    private string errorMessage = "";
+
+    private async Task RegisterUser()
+    {
+        try
+        {
+            newUser.Password = BCrypt.HashPassword(newUser.Password);
+
+            newUser.Role = "User";
+
+            LoginService.Register(newUser);
+
+            successMessage = "Rejestracja zakończona sukcesem!";
+            errorMessage = "";
+            newUser = new();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Błąd podczas rejestracji: " + ex.Message;
+            successMessage = "";
+        }
+    }
+}

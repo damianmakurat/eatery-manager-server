@@ -1,0 +1,58 @@
+﻿@page "/main"
+
+@using eatery_manager_server.Data.Models;
+@using eatery_manager_server.Data.Services;
+
+@inject MenuService MenuService
+
+<PageTitle>Main</PageTitle>
+
+<h1>Lista Menu</h1>
+
+<h3>Dodaj nowy produkt</h3>
+
+<input @bind="NewItem.Name" placeholder="Nazwa" />
+<input @bind="NewItem.Price" type="number" placeholder="Cena" />
+<button @onclick="AddItem">Dodaj</button>
+
+<h3>Menu</h3>
+
+@if (MenuItems == null || MenuItems.Count == 0)
+{
+    <p>Brak dostępnych pozycji w menu.</p>
+}
+else
+{
+    <ul>
+        @foreach (var item in MenuItems)
+        {
+            <li>@item.Name - @item.Price zł</li>
+        }
+    </ul>
+}
+
+@code {
+    private List<Menu> MenuItems = new();
+    private Menu NewItem = new Menu();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        MenuItems = MenuService.GetMenuItems();
+    }
+
+    private void AddItem()
+    {
+        if (string.IsNullOrWhiteSpace(NewItem.Name))
+        {
+            Console.WriteLine("Błąd: Pole 'Name' nie może być puste!");
+            return; // Przerwij dodawanie rekordu
+        }
+
+        Console.WriteLine($"Dodawanie: {NewItem.Name} - {NewItem.Price}");
+        MenuService.AddMenuItem(NewItem);
+        MenuItems = MenuService.GetMenuItems();
+        NewItem = new Menu(); // Resetowanie formularza
+        StateHasChanged();
+    }
+}

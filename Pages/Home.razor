@@ -1,0 +1,15 @@
+﻿@page "/home"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<h1>This is home page.</h1>
+
+@code {
+    private void TestButtonClick()
+    {
+        Console.WriteLine("Przycisk działa!");
+    }
+}
+<button @onclick="TestButtonClick">Testuj przycisk</button>
