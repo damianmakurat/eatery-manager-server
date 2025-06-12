@@ -1,8 +1,188 @@
 ﻿@page "/reservations"
 @layout eatery_manager_server.Shared.ReservationsLayout
+@using eatery_manager_server.Data.Models
+@inject eatery_manager_server.Data.Services.ReservationsService ReservationsService
+@inject eatery_manager_server.Data.Services.TablesService TablesService
 
-<h3>Reservations</h3>
+<h3>Rezerwacja stolika</h3>
+
+<div class="mb-3">
+    <label for="reservationDate">Wybierz datę:</label>
+    <InputDate @bind-Value="SelectedDate" class="form-control" id="reservationDate" />
+</div>
+
+<div class="mb-3">
+    <label for="reservationTime">Wybierz godzinę:</label>
+    <InputSelect @bind-Value="SelectedTimeString" class="form-control" id="reservationTime">
+        <option disabled selected value="">-- wybierz godzinę --</option>
+        @foreach (var time in AvailableTimes)
+        {
+            <option value="@time">@time</option>
+        }
+    </InputSelect>
+</div>
+
+<div class="mt-3">
+    <p><strong>Wybrana data:</strong> @SelectedDate?.ToShortDateString()</p>
+    <p><strong>Wybrana godzina:</strong> @SelectedTimeString</p>
+</div>
+
+<div class="mb-3">
+    <label for="duration">Czas trwania (min):</label>
+    <InputSelect @bind-Value="SelectedDuration" class="form-control" id="duration">
+        @foreach (var duration in AvailableDurations)
+        {
+            <option value="@duration">@duration minut</option>
+        }
+    </InputSelect>
+</div>
+
+<button class="btn btn-primary mt-3" @onclick="CheckAvailability">Sprawdź stoliki</button>
+
+@if (AvailableTables != null)
+{
+    <h5 class="mt-3">Dostępne stoliki:</h5>
+    @if (AvailableTables.Count == 0)
+    {
+        <p>Brak dostępnych stolików w wybranym czasie.</p>
+    }
+    else
+    {
+        <div class="d-flex flex-wrap gap-2 mt-2">
+            @foreach (var table in AvailableTables)
+            {
+                <button class="btn btn-outline-primary"
+                        @onclick="() => SelectTable(table.TableId)">
+                    Stolik @table.TableId (Miejsc: @table.Capacity)
+                </button>
+            }
+        </div>
+    }
+}
+
+@if (ShowReservationForm)
+{
+    <div class="mt-4">
+        <h5>Rezerwacja stolika @SelectedTableId</h5>
+
+        <div class="mb-2">
+            <label>Imię:</label>
+            <InputText @bind-Value="FirstName" class="form-control" />
+        </div>
+
+        <div class="mb-2">
+            <label>Nazwisko:</label>
+            <InputText @bind-Value="LastName" class="form-control" />
+        </div>
+
+        <button class="btn btn-success" @onclick="ConfirmReservation">Potwierdź rezerwację</button>
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(ConfirmationMessage))
+{
+    <div class="alert alert-success mt-3">@ConfirmationMessage</div>
+}
 
 @code {
+    private List<eatery_manager_server.Data.Models.Reservations> ReservationsItems = new();
+    private List<string> AvailableTimes = new();
 
+    private DateOnly? SelectedDate = DateOnly.FromDateTime(DateTime.Today);
+    private string SelectedTimeString { get; set; } = "";
+    private int SelectedDuration = 60;
+    private List<int> AvailableDurations = new() { 30, 60, 90, 120, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 480 };
+    private List<Tables> AvailableTables = new();
+
+    private int? SelectedTableId { get; set; } = null;
+    private string FirstName = "";
+    private string LastName = "";
+    private bool ShowReservationForm = false;
+    private string ConfirmationMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        ReservationsItems = await ReservationsService.GetReservationsAsync();
+        GenerateAvailableTimes();
+    }
+
+    private void GenerateAvailableTimes()
+    {
+        var start = new TimeSpan(10, 0, 0);
+        var end = new TimeSpan(22, 0, 0);
+        var interval = new TimeSpan(0, 30, 0);
+
+        AvailableTimes.Clear();
+
+        for (var time = start; time <= end; time += interval)
+        {
+            AvailableTimes.Add(time.ToString(@"hh\:mm"));
+        }
+    }
+
+    private async Task CheckAvailability()
+    {
+        if (SelectedDate == null || string.IsNullOrEmpty(SelectedTimeString))
+        {
+            return;
+        }
+
+        var start = TimeOnly.Parse(SelectedTimeString);
+        var end = start.AddMinutes(SelectedDuration);
+        var dateOnly = SelectedDate.Value;
+
+        AvailableTables = await ReservationsService.GetAvailableTablesAsync(dateOnly, start, end);
+
+        ShowReservationForm = false;
+        SelectedTableId = null;
+        FirstName = LastName = "";
+        ConfirmationMessage = "";
+
+        StateHasChanged();
+    }
+
+    private void SelectTable(int tableId)
+    {
+        SelectedTableId = tableId;
+        ShowReservationForm = true;
+        ConfirmationMessage = "";
+    }
+
+    private async Task ConfirmReservation()
+    {
+        if (SelectedTableId == null || SelectedDate == null || string.IsNullOrWhiteSpace(SelectedTimeString))
+        {
+            Console.WriteLine("Brakuje danych do rezerwacji.");
+            return;
+        }
+
+        var startTime = TimeOnly.Parse(SelectedTimeString);
+        var endTime = startTime.AddMinutes(SelectedDuration);
+
+        var reservation = new eatery_manager_server.Data.Models.Reservations
+            {
+                TableId = SelectedTableId.Value,
+                Name = FirstName,
+                Surname = LastName,
+                Date = SelectedDate.Value,
+                StartTime = startTime,
+                EndTime = endTime
+            };
+
+        try
+        {
+            await ReservationsService.AddReservationAsync(reservation);
+
+            ConfirmationMessage = $"Zarezerwowano stolik {SelectedTableId} dla {FirstName} {LastName}!";
+            ShowReservationForm = false;
+            SelectedTableId = null;
+            FirstName = LastName = "";
+
+            await CheckAvailability(); // odśwież dostępne stoliki
+        }
+        catch (InvalidOperationException ex)
+        {
+            ConfirmationMessage = $"Błąd: {ex.Message}";
+        }
+    }
 }

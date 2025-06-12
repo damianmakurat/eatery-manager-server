@@ -5,7 +5,7 @@ namespace eatery_manager_server.Data.Models
     public class Tables
     {
         [Key]
-        public int TableID { get; set; }
+        public int TableId { get; set; }
 
         [Required(ErrorMessage = "Lokalizacja X jest wymagana")]
         public string LocationX { get; set; } = string.Empty;
@@ -15,5 +15,6 @@ namespace eatery_manager_server.Data.Models
 
         [Required(ErrorMessage = "Ilość miejsc jest wymagana")]
         public int Capacity { get; set; }
+
     }
 }

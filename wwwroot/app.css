@@ -1,62 +1,243 @@
-
+/* Styl ogólny */
 body {
-    background-color: #cccccc;
-    color: white;
+    background-color: #121212;
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("img/background.png");
+    color: #f0f0f0;
     margin: 0;
+    font-family: Arial, sans-serif;
 }
 
+/* Pasek nawigacji */
 .top-nav {
-    background-color: #111; /* Kolor t³a */
-    color: white; /* Kolor tekstu */
-    padding: 10px 20px; /* Odstêpy */
-    width: 100%; /* Rozci¹gniêcie na ca³¹ szerokoœæ */
-    position: fixed; /* Ustawienie na górze ekranu */
-    top: 0; /* Przyleganie do górnej krawêdzi */
-    z-index: 1000; /* Widocznoœæ nad innymi elementami */
-    display: flex; /* Ustawienie elementów w linii */
-    justify-content: flex-end; /* Przyciski z prawej strony */
-    align-items: center; /* Wyrównanie w pionie */
+    background-color: #111;
+    color: #fff;
+    padding: 15px 25px;
+    width: 100%;
+    position: fixed;
+    top: 65px;
+    z-index: 1001;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    border-bottom: 2px solid #ffcc00;
 }
 
+/* Stylowanie przycisków nawigacyjnych */
 .nav-button {
-    text-decoration: none; /* Usuñ podkreœlenie */
-    color: white; /* Kolor linków */
-    font-weight: bold; /* Wyró¿nienie tekstu */
-    font-size: 16px; /* Rozmiar czcionki */
-    padding: 10px 15px; /* Odstêpy wokó³ linków */
-    border: 2px solid white; /* Bia³e obramowanie */
-    background-color: transparent; /* Przezroczysty przycisk */
-    border-radius: 5px; /* Zaokr¹glone rogi */
-    margin-left: 10px; /* Odstêpy miêdzy przyciskami */
-    transition: background-color 0.3s; /* Efekt hover */
+    text-decoration: none;
+    color: #fff;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 12px 18px;
+    border: 2px solid #ffcc00;
+    background-color: transparent;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
-    .nav-button:hover {
-        color: #ff5733; /* Zmiana koloru linków na hover */
-        background-color: rgba(255, 255, 255, 0.2); /* Efekt hover na tle */
+    .nav-button:hover,
+    .nav-button.active {
+        color: #333;
+        background-color: #ffcc00;
+        border-color: #fff;
     }
 
-.login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh; /* Pe³na wysokoœæ ekranu */
-    background: linear-gradient(to bottom, #4a90e2, #0044cc); /* Gradient t³a */
-    color: white; /* Kolor tekstu */
+/* Pasek statusu u¿ytkownika */
+.user-status-bar {
+    background-color: #444;
+    color: #fff;
+    text-align: center;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    z-index: 1002;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-    .login-container form {
-        background: rgba(255, 255, 255, 0.2); /* Przezroczyste t³o */
-        padding: 20px;
-        border-radius: 10px;
-        backdrop-filter: blur(10px); /* Efekt rozmycia */
+/* Stylowanie g³ównej sekcji */
+main {
+    margin-top: 150px;
+    padding: 25px;
+}
+
+/* Karty menu */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.menu-card {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid white;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    transition: transform 0.3s, background-color 0.3s;
+}
+
+    .menu-card:hover {
+        transform: scale(1.05);
+        background-color: rgba(255, 255, 255, 0.2);
     }
 
-.reservations-container {
+/* Stylowanie pozycji w menu */
+.menu-tile-list {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+}
+
+.menu-tile {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    height: 100vh; /* Pe³na wysokoœæ ekranu */
-    background: linear-gradient(to bottom, #444, #ff5733); /* Gradient t³a */
-    color: white; /* Kolor tekstu */
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid white;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.tile-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.menu-number {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #ffcc00;
+}
+
+.menu-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: white;
+}
+
+.menu-desc {
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.tile-price {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: white;
+}
+
+/* Stylowanie formularzy */
+.form-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    font-weight: bold;
+    color: white;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ffcc00;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* Przyciski */
+.btn-primary, .btn {
+    background-color: #ffcc00;
+    border: 2px solid #333;
+    color: #333;
+    font-weight: bold;
+    padding: 12px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+    .btn-primary:hover, .btn:hover {
+        background-color: #e6b800;
+        border-color: #fff;
+        color: #fff;
+    }
+
+.btn-secondary {
+    background-color: transparent;
+    border: 2px solid #ffcc00;
+    color: #ffcc00;
+    font-weight: bold;
+    padding: 10px 18px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+    .btn-secondary:hover {
+        background-color: #ffcc00;
+        color: #333;
+    }
+
+/* Style dla komunikatów */
+.alert-success {
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.alert-error {
+    background-color: #f44336;
+    color: white;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Pola formularza */
+.form_input {
+    justify-content: space-between;
+    border-radius: 10px;
+    padding: 5px;
+    border: solid 1px black;
+    width: 20%;
+}
+
+.form_button_submit {
+    border-radius: 10px;
+    padding: 10px;
+    border: solid 5px black;
+    background-color: #4CAF50; /* Zielony kolor */
+}
+
+.form_button_cancel {
+    border-radius: 10px;
+    padding: 10px;
+    border: solid 5px black;
+    background-color: #f44336; /* Czerwony kolor */
 }

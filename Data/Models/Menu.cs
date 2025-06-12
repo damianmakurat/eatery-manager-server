@@ -1,14 +1,26 @@
-﻿namespace eatery_manager_server.Data.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class Menu
+namespace eatery_manager_server.Data.Models
 {
-    [Key]
-    public int Id { get; set; } // Klucz główny, powinien być automatycznie generowany
+    public class Menu
+    {
+        [Key]
+        public int Id { get; set; }
 
-    [Required]
-    public string Name { get; set; } = string.Empty; // Initialize with a default value
+        [Required(ErrorMessage = "Nazwa pozycji jest wymagana")]
+        public string Name { get; set; } = string.Empty;
 
-    [Required]
-    public decimal Price { get; set; }
+        [Required(ErrorMessage = "Cena jest wymagana")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Cena musi być większa od 0")]
+        public decimal Price { get; set; }
+
+        [Required]
+        public string Ingredients { get; set; } = string.Empty;
+
+        public int Order { get; set; }
+
+        public string Category { get; set; } = string.Empty;
+
+    }
+
 }

@@ -5,7 +5,7 @@ namespace eatery_manager_server.Data.Models
     public class Login
     {
         [Key]
-        public int UserID { get; set; }
+        public int UserId { get; set; }
 
         [Required(ErrorMessage = "Nazwa użytkownika jest wymagana")]
         public string Username { get; set; } = string.Empty;
@@ -18,6 +18,6 @@ namespace eatery_manager_server.Data.Models
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        public string Role { get; set; } = "User"; // np. "User" albo "Admin"
+        public string Role { get; set; } = "User";
     }
 }

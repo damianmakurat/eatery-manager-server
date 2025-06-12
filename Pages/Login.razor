@@ -1,31 +1,52 @@
 ﻿@page "/login"
 @layout eatery_manager_server.Shared.LoginLayout
-@using eatery_manager_server.Data.Models
-@inject eatery_manager_server.Data.Services.LoginService LoginService
 
-<h3>Login</h3>
+@using Microsoft.AspNetCore.Components.Authorization
+@using eatery_manager_server.Data.Services
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthProvider
+@inject LoginService LoginService
 
-@if (LoginItems == null || LoginItems.Count == 0)
+<h3 class="form-title">Zaloguj się</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
 {
-    <p>Brak dostępnych pozycji w menu.</p>
+    <div class="alert alert-danger">@errorMessage</div>
 }
-else
-{
-    <ul>
-        @foreach (var item in LoginItems)
-        {
-            <li>@item.Username - @item.Password zł</li>
-        }
-    </ul>
-}
+
+<EditForm Model="@userLogin" OnValidSubmit="HandleLogin">
+    <div class="form-group">
+        <label>Login lub email:</label>
+        <InputText @bind-Value="userLogin.Username" class="form-control" placeholder="Podaj login lub email" />
+    </div>
+
+    <div class="form-group">
+        <label>Hasło:</label>
+        <InputText @bind-Value="userLogin.Password" type="password" class="form-control" placeholder="Podaj hasło" />
+    </div>
+
+    <button type="submit" class="btn-primary">Zaloguj</button>
+</EditForm>
+
+<p class="mt-3">
+    Nie masz konta? <NavLink href="/register" class="btn-secondary">Zarejestruj się</NavLink>
+</p>
 
 @code {
-    private List<eatery_manager_server.Data.Models.Login> LoginItems = new();
+    private eatery_manager_server.Data.Models.Login userLogin = new();
+    private string? errorMessage;
 
-    protected override void OnInitialized()
+    private async Task HandleLogin()
     {
-        base.OnInitialized();
-        LoginItems = LoginService.GetUsers();
-    }
+        bool success = await LoginService.LoginAsync(userLogin.Username, userLogin.Password);
 
+        if (success)
+        {
+            NavigationManager.NavigateTo("/home");
+        }
+        else
+        {
+            errorMessage = "Nieprawidłowy login lub hasło.";
+        }
+    }
 }

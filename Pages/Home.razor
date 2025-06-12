@@ -1,15 +1,37 @@
 ﻿@page "/home"
+@layout MainLayout
 
-<PageTitle>Home</PageTitle>
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthProvider
 
-<h1>Hello, world!</h1>
+<h1>Witamy w naszej restauracji!</h1>
 
-<h1>This is home page.</h1>
+<p>Znajdź idealne danie i zarezerwuj stolik online.</p>
+
+<div class="d-flex flex-column gap-3 mt-4">
+    <NavLink href="/main" class="btn btn-outline-light btn-lg">Zobacz menu</NavLink>
+    <NavLink href="/reservations" class="btn btn-outline-success btn-lg">Zarezerwuj stolik</NavLink>
+</div>
+
+@if (!isLoading && authState.User.Identity?.IsAuthenticated == true)
+{
+    <p class="mt-4">
+        Zalogowano jako <strong>@authState.User.Identity.Name</strong> (@authState.User.FindFirst(c => c.Type == ClaimTypes.Role)?.Value)
+    </p>
+}
+else if (!isLoading)
+{
+    <p class="mt-4">Nie jesteś zalogowany.</p>
+}
 
 @code {
-    private void TestButtonClick()
+    private AuthenticationState authState = default!;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("Przycisk działa!");
+        authState = await AuthProvider.GetAuthenticationStateAsync();
+        isLoading = false;
     }
 }
-<button @onclick="TestButtonClick">Testuj przycisk</button>

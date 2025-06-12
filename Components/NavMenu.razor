@@ -1,7 +1,54 @@
-﻿<div class="top-nav">
-	<button class="nav-button" onclick="location.href='/about'" type="button">About</button>
-	<button class="nav-button" onclick="location.href='/home'" type="button">Home</button>
-	<button class="nav-button" onclick="location.href='/main'" type="button">Main</button>
-	<button class="nav-button" onclick="location.href='/login'" type="button">Zaloguj</button>
-	<button class="nav-button" onclick="location.href='/reservations'" type="button">Zarezerwuj stolik</button>
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@using eatery_manager_server.Data.Services
+
+
+<div class="user-status-bar">
+    @if (!isLoading && authState.User.Identity?.IsAuthenticated == true)
+    {
+        <p>Zalogowano jako: <strong>@authState.User.Identity.Name</strong> (Rola: <strong>@authState.User.FindFirst(c => c.Type == ClaimTypes.Role)?.Value</strong>)</p>
+    }
+    else if (!isLoading)
+    {
+        <p>Nie jesteś zalogowany.</p>
+    }
 </div>
+
+<div class="top-nav">
+    <NavLink class="nav-button" href="/about">O nas</NavLink>
+    <NavLink class="nav-button" href="/home">Strona główna</NavLink>
+    <NavLink class="nav-button" href="/main">Menu</NavLink>
+    <NavLink class="nav-button" href="/reservations">Rezerwacje</NavLink>
+
+    @if (!isLoading && authState.User.Identity?.IsAuthenticated == true)
+    {
+        <button class="nav-button" @onclick="Logout">Wyloguj</button>
+    }
+    else
+    {
+        <NavLink class="nav-button" href="/login">Zaloguj</NavLink>
+        <NavLink class="nav-button" href="/register">Rejestracja</NavLink>
+    }
+</div>
+
+@code {
+    private AuthenticationState authState = default!;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        authState = await AuthProvider.GetAuthenticationStateAsync();
+        isLoading = false;
+    }
+    private void Logout()
+    {
+        if (AuthProvider is CustomAuthenticationStateProvider customAuth)
+        {
+            customAuth.MarkUserAsLoggedOut();
+            Navigation.NavigateTo("/home", true);
+        }
+    }
+
+}

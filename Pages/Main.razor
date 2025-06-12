@@ -1,19 +1,12 @@
 ﻿@page "/main"
-
-@using eatery_manager_server.Data.Models;
-@using eatery_manager_server.Data.Services;
-
+@using eatery_manager_server.Data.Models
+@using eatery_manager_server.Data.Services
 @inject MenuService MenuService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims;
 
-<PageTitle>Main</PageTitle>
-
-<h1>Lista Menu</h1>
-
-<h3>Dodaj nowy produkt</h3>
-
-<input @bind="NewItem.Name" placeholder="Nazwa" />
-<input @bind="NewItem.Price" type="number" placeholder="Cena" />
-<button @onclick="AddItem">Dodaj</button>
+<PageTitle>Menu</PageTitle>
 
 <h3>Menu</h3>
 
@@ -23,36 +16,191 @@
 }
 else
 {
-    <ul>
-        @foreach (var item in MenuItems)
+    @if (IsAdmin)
+    {
+        <button class="nav-button" style="background-color: #ffcc00; color:black;" @onclick="ToggleAddForm">Dodaj nową pozycję</button>
+    }
+    @if (showAddForm)
+    {
+        <div class="add-form">
+            <label>Nazwa potrawy</label>
+            <input class="form_input" @bind="AddItemModel.Name" />
+
+            <label>Składniki</label>
+            <input class="form_input" style="width:100%" @bind="AddItemModel.Ingredients" />
+
+            <label>Kategoria</label>
+            <select class="form_input" @bind="AddItemModel.Category">
+                <option value="">-- Wybierz kategorię --</option>
+                @foreach (var cat in Categories)
+                {
+                    <option value="@cat">@cat</option>
+                }
+            </select>
+
+            <label>Kolejność w menu</label>
+            <input class="form_input" type="number" @bind="AddItemModel.Order" />
+
+            <label>Cena</label>
+            <input class="form_input" type="number" step="0.01" @bind="AddItemModel.Price" />
+
+            <button class="nav-button" @onclick="AddMenuItem">Zapisz</button>
+            <button class="nav-button" @onclick="ToggleAddForm">Anuluj</button>
+        </div>
+    }
+
+    <div class="menu-tile-list">
+        @foreach (var categoryGroup in MenuItems.GroupBy(m => m.Category).OrderBy(g => g.Key))
         {
-            <li>@item.Name - @item.Price zł</li>
+            <h4>@(string.IsNullOrEmpty(categoryGroup.Key) ? "Inne" : categoryGroup.Key)</h4>
+
+            @foreach (var item in categoryGroup.OrderBy(m => m.Order))
+            {
+                <div class="menu-tile">
+                    <div class="tile-left">
+                        <div class="menu-number">@($"{MenuItems.IndexOf(item) + 1}.")</div>
+                        <div class="menu-text">
+                            <div class="menu-name">@item.Name</div>
+                            <div class="menu-desc">@item.Ingredients</div>
+                        </div>
+                    </div>
+                    <div class="tile-price">@item.Price zł</div>
+                </div>
+
+                @if (IsAdmin)
+                {
+                    <div class="admin-actions">
+                        <button class="nav-button" @onclick="@(() => StartEdit(item))">Edytuj</button>
+                        <button class="nav-button" @onclick="@(() => DeleteItem(item.Id))">Usuń</button>
+                    </div>
+                }
+
+                @if (EditItemId == item.Id)
+                {
+                    <div class="edit-form">
+                        <label>Nazwa potrawy</label>
+                        <input class="form_input" @bind="EditItemModel.Name" />
+
+                        <label>Składniki</label>
+                        <input class="form_input" style="width:100%" @bind="EditItemModel.Ingredients" />
+
+                        <label>Kategoria</label>
+                        <select class="form_input" @bind="EditItemModel.Category">
+                            <option value="">-- Wybierz kategorię --</option>
+                            @foreach (var cat in Categories)
+                            {
+                                <option value="@cat">@cat</option>
+                            }
+                        </select>
+
+                        <label>Kolejność w menu</label>
+                        <input class="form_input" type="number" @bind="EditItemModel.Order" />
+
+                        <label>Cena</label>
+                        <input class="form_input" type="number" step="0.01" @bind="EditItemModel.Price" />
+
+                        <button class="form_button_submit" @onclick="() => SaveEdit(item.Id)">Zapisz</button>
+                        <button class="form_button_cancel" @onclick="CancelEdit">Anuluj</button>
+                    </div>
+                }
+            }
         }
-    </ul>
+    </div>
 }
 
 @code {
     private List<Menu> MenuItems = new();
-    private Menu NewItem = new Menu();
+    private List<string> Categories = new();
+    private bool IsAdmin = false;
+    private bool showAddForm = false;
+    private int? EditItemId = null;
+    private Menu EditItemModel = new();
+    private Menu AddItemModel = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
-        MenuItems = MenuService.GetMenuItems();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        IsAdmin = user.Identity?.IsAuthenticated == true && user.IsInRole("Admin");
+
+        MenuItems = (await MenuService.GetMenuItemsAsync()).OrderBy(m => m.Order).ToList();
+
+        Categories = await MenuService.GetCategoriesAsync();
     }
 
-    private void AddItem()
+    private void ToggleAddForm()
     {
-        if (string.IsNullOrWhiteSpace(NewItem.Name))
+        showAddForm = !showAddForm;
+    }
+
+    private async Task AddMenuItem()
+    {
+        if (string.IsNullOrWhiteSpace(AddItemModel.Name))
         {
-            Console.WriteLine("Błąd: Pole 'Name' nie może być puste!");
-            return; // Przerwij dodawanie rekordu
+            Console.WriteLine("Błąd: nazwa wymagana");
+            return;
         }
 
-        Console.WriteLine($"Dodawanie: {NewItem.Name} - {NewItem.Price}");
-        MenuService.AddMenuItem(NewItem);
-        MenuItems = MenuService.GetMenuItems();
-        NewItem = new Menu(); // Resetowanie formularza
-        StateHasChanged();
+        var newItem = new Menu
+            {
+                Name = AddItemModel.Name,
+                Ingredients = AddItemModel.Ingredients,
+                Price = AddItemModel.Price,
+                Order = AddItemModel.Order,
+                Category = AddItemModel.Category
+            };
+
+        await MenuService.AddMenuItemAsync(newItem);
+        MenuItems = (await MenuService.GetMenuItemsAsync()).OrderBy(m => m.Order).ToList();
+        Categories = await MenuService.GetCategoriesAsync();
+
+        AddItemModel = new Menu();
+        showAddForm = false;
+    }
+
+    private async Task DeleteItem(int id)
+    {
+        await MenuService.DeleteMenuItemAsync(id);
+        MenuItems = (await MenuService.GetMenuItemsAsync()).OrderBy(m => m.Order).ToList();
+        Categories = await MenuService.GetCategoriesAsync();
+    }
+
+    private void StartEdit(Menu item)
+    {
+        EditItemId = item.Id;
+        EditItemModel = new Menu
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Ingredients = item.Ingredients,
+                Price = item.Price,
+                Order = item.Order,
+                Category = item.Category
+            };
+    }
+
+    private void CancelEdit()
+    {
+        EditItemId = null;
+    }
+
+    private async Task SaveEdit(int id)
+    {
+        var menuItem = await MenuService.GetMenuItemByIdAsync(id);
+        if (menuItem != null)
+        {
+            menuItem.Name = EditItemModel.Name;
+            menuItem.Ingredients = EditItemModel.Ingredients;
+            menuItem.Price = EditItemModel.Price;
+            menuItem.Order = EditItemModel.Order;
+            menuItem.Category = EditItemModel.Category;
+
+            await MenuService.UpdateMenuItemAsync(menuItem);
+            MenuItems = (await MenuService.GetMenuItemsAsync()).OrderBy(m => m.Order).ToList();
+            Categories = await MenuService.GetCategoriesAsync();
+        }
+
+        EditItemId = null;
     }
 }
